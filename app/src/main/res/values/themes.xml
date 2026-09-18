@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.Fms" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:statusBarColor">#7B1824</item>
+        <item name="android:windowBackground">#FAFBF7</item>
+    </style>
+</resources>
