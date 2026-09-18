@@ -2,6 +2,7 @@ package com.sanganericart.fms;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -18,18 +20,11 @@ import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 /**
  * SanganeriCart FMS - team ke phone ke liye
  * ---------------------------------------------------------------
  * Ye app kuch naya nahi dikhati. Wahi portal andar chalta hai jo
- * browser me chalta hai. Farak sirf ek hai, aur wahi sabse zaroori
- * hai:
+ * browser me chalta hai. Farak sirf ek, aur wahi sabse zaroori hai:
  *
  *   Portal me hara "Call" button dabate hi CALL LAG JATI HAI.
  *   Dialer screen beech me nahi aati, green button dabana nahi
@@ -41,15 +36,19 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
  *
  * Call company ke apne SIM se hi jati hai - customer ko wahi number
  * dikhta hai jo aapne diya hua hai.
+ *
+ * DHYAN: is file me ek bhi bahar ki library nahi hai - sirf Android
+ * ka apna saamaan. Isliye build kabhi kisi library ke jhagde me
+ * nahi phansta.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     /** Login page. Kabhi link badle to sirf yahi line badalni hai. */
     private static final String DEFAULT_URL = "https://sanganeri-fms.pages.dev/";
 
     private static final int REQ_CALL = 101;
 
-    /** Net na ho ya link galat ho to yahi dikhta hai - saaf, aur do button */
+    /** Net na ho ya link galat ho to yahi dikhta hai - do saaf button ke saath */
     private static final String ERROR_PAGE =
         "<html><head><meta name='viewport' content='width=device-width,initial-scale=1'>"
       + "<style>body{font:16px/1.6 sans-serif;padding:34px 24px;color:#17251E;"
@@ -64,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
       + "<a class='b' href='fmsconfig:'>Change link</a></body></html>";
 
     private WebView web;
-    private SwipeRefreshLayout swipe;
     private SharedPreferences prefs;
 
     /** Jis number par call karni hai - permission maangne ke beech me sambhal kar */
@@ -78,7 +76,6 @@ public class MainActivity extends AppCompatActivity {
 
         prefs = getSharedPreferences("fms", MODE_PRIVATE);
         web   = findViewById(R.id.web);
-        swipe = findViewById(R.id.swipe);
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -111,21 +108,12 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onPageFinished(WebView v, String url) {
-                swipe.setRefreshing(false);
-            }
-
-            @Override
             public void onReceivedError(WebView v, WebResourceRequest req,
-                                        android.webkit.WebResourceError err) {
+                                        WebResourceError err) {
                 if (req != null && !req.isForMainFrame()) return;
-                swipe.setRefreshing(false);
                 v.loadDataWithBaseURL(null, ERROR_PAGE, "text/html", "utf-8", null);
             }
         });
-
-        swipe.setOnRefreshListener(() -> web.reload());
-        swipe.setColorSchemeColors(0xFF7B1824);
 
         web.loadUrl(prefs.getString("url", DEFAULT_URL));
     }
@@ -166,11 +154,10 @@ public class MainActivity extends AppCompatActivity {
         String n = number == null ? "" : number.replaceAll("[^0-9+]", "");
         if (n.isEmpty()) return;
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
+        if (checkSelfPermission(Manifest.permission.CALL_PHONE)
                 != PackageManager.PERMISSION_GRANTED) {
             pendingNumber = n;
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CALL_PHONE}, REQ_CALL);
+            requestPermissions(new String[]{Manifest.permission.CALL_PHONE}, REQ_CALL);
             return;
         }
         try {
@@ -205,8 +192,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int code, @NonNull String[] perms,
-                                           @NonNull int[] res) {
+    public void onRequestPermissionsResult(int code, String[] perms, int[] res) {
         super.onRequestPermissionsResult(code, perms, res);
         if (code != REQ_CALL) return;
         String n = pendingNumber;

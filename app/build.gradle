@@ -13,9 +13,7 @@ android {
     }
 
     buildTypes {
-        release {
-            minifyEnabled false
-        }
+        release { minifyEnabled false }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -23,7 +21,17 @@ android {
     }
 }
 
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
-}
+// ---------------------------------------------------------------------
+//  Ek bhi library nahi
+//
+//  Pehle yahan androidx.appcompat aur swiperefreshlayout lagayi thi.
+//  Wo apne saath Kotlin ke do alag-alag purane tukde kheench laayin
+//  (kotlin-stdlib 1.8.22 aur kotlin-stdlib-jdk8 1.6.21) jo aapas me
+//  takra gaye - "Duplicate class" wali galti wahi thi.
+//
+//  Hamari app ko in dono ki zaroorat hai hi nahi: Android ka apna
+//  Activity aur WebView kaafi hai, aur Refresh ka button to portal me
+//  khud maujood hai. Isliye ab yahan kuch nahi - build saaf bhi, tez bhi,
+//  aur APK chhoti bhi.
+// ---------------------------------------------------------------------
+dependencies { }
